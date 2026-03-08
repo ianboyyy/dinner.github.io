@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>晚餐隨機選擇器</title>
+  <style>
+    body {
+      font-family: "Noto Sans TC", Arial, sans-serif;
+      max-width: 760px;
+      margin: 40px auto;
+      padding: 0 16px 32px;
+      line-height: 1.6;
+      color: #222;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+    }
+
+    .box {
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 16px;
+      background: #fff;
+    }
+
+    input, select, button {
+      font-size: 16px;
+      padding: 10px 12px;
+      margin: 6px 6px 6px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background: #fff;
+    }
+
+    button {
+      cursor: pointer;
+      background: #f6f6f6;
+    }
+
+    button:hover {
+      background: #ececec;
+    }
+
+    .result {
+      font-size: 22px;
+      font-weight: bold;
+      margin: 12px 0;
+    }
+
+    .muted {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    #mapFrame {
+      width: 100%;
+      height: 320px;
+      border: 0;
+      border-radius: 12px;
+      margin-top: 16px;
+      background: #fafafa;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .button-row button {
+      margin: 0;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        margin: 16px auto;
+        padding: 0 12px 24px;
+      }
+
+      h1 {
+        font-size: 24px;
+        line-height: 1.3;
+      }
+
+      p {
+        font-size: 15px;
+      }
+
+      .box {
+        padding: 14px;
+        border-radius: 14px;
+      }
+
+      input,
+      select,
+      button {
+        width: 100%;
+        box-sizing: border-box;
+        font-size: 16px;
+        padding: 14px 12px;
+        margin: 8px 0;
+      }
+
+      .button-row {
+        display: block;
+      }
+
+      .button-row button {
+        width: 100%;
+        margin: 8px 0 0;
+      }
+
+      .result {
+        font-size: 24px;
+        line-height: 1.4;
+      }
+
+      #mapFrame {
+        height: 260px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>晚餐隨機選擇器</h1>
+  <p>先匯入你的 CSV 清單，之後手機會記住資料。下次打開可直接使用。</p>
+
+  <div class="box">
+    <input type="file" id="fileInput" accept=".csv" />
+    <select id="citySelect">
+      <option value="">全部城市</option>
+    </select>
+    <input type="text" id="keywordInput" placeholder="可輸入關鍵字，例如 火鍋、拉麵、日式" />
+    <div class="button-row">
+      <button id="pickBtn">隨機選一家</button>
+      <button id="clearBtn">清空篩選</button>
+      <button id="resetDataBtn">清除已儲存清單</button>
+    </div>
+    <div class="muted" id="countText">尚未載入資料</div>
+  </div>
+
+  <div class="box hidden" id="resultBox">
+    <div class="result" id="nameText"></div>
+    <div id="cityText"></div>
+    <div id="addressText"></div>
+    <div id="noteText"></div>
+
+    <iframe
+      id="mapFrame"
+      loading="lazy"
+      allowfullscreen
+      referrerpolicy="no-referrer-when-downgrade">
+    </iframe>
+
+    <div class="button-row">
+      <button id="openMapBtn">打開 Google Maps</button>
+      <button id="repickBtn">再抽一次</button>
+    </div>
+  </div>
+
+  <script>
+    const GOOGLE_MAPS_EMBED_API_KEY = "";
+
+    let places = [];
+    let lastPicked = null;
+
+    function parseCSV(text) {
+      const rows = [];
+      let row = [];
+      let value = "";
+      let inQuotes = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const next = text[i + 1];
+
+        if (char === '"') {
+          if (inQuotes && next === '"') {
+            value += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (char === "," && !inQuotes) {
+          row.push(value);
+          value = "";
+        } else if ((char === "\n" || char === "\r") && !inQuotes) {
+          if (char === "\r" && next === "\n") i++;
+          row.push(value);
+          if (row.some(cell => cell.trim() !== "")) rows.push(row);
+          row = [];
+          value = "";
+        } else {
+          value += char;
+        }
+      }
+
+      if (value.length > 0 || row.length > 0) {
+        row.push(value);
+        if (row.some(cell => cell.trim() !== "")) rows.push(row);
+      }
+
+      return rows;
+    }
+
+    function normalizeHeader(text) {
+      return text.trim().toLowerCase();
+    }
+
+    function getCell(obj, keys) {
+      for (const key of keys) {
+        if (obj[key] !== undefined) return obj[key].trim();
+      }
+      return "";
+    }
+
+    function saveCSVToLocal(text) {
+      localStorage.setItem("dinner_csv_text", text);
+    }
+
+    function loadCSVFromLocal() {
+      const saved = localStorage.getItem("dinner_csv_text");
+      if (saved) {
+        loadCSV(saved);
+      }
+    }
+
+    function loadCSV(text) {
+      const rows = parseCSV(text);
+      if (rows.length < 2) {
+        alert("CSV 內容不足，至少要有標題列和一筆資料。");
+        return;
+      }
+
+      const headers = rows[0].map(normalizeHeader);
+
+      places = rows.slice(1).map(cols => {
+        const rowObj = {};
+        headers.forEach((h, i) => rowObj[h] = cols[i] || "");
+
+        return {
+          name: getCell(rowObj, ["name", "title", "店名", "名稱"]),
+          address: getCell(rowObj, ["address", "地址"]),
+          city: getCell(rowObj, ["city", "城市"]),
+          note: getCell(rowObj, ["note", "備註", "tag", "分類"]),
+          url: getCell(rowObj, ["url", "link", "maps", "googlemaps"])
+        };
+      }).filter(p => p.name || p.address);
+
+      updateCityOptions();
+      document.getElementById("countText").textContent = `已載入 ${places.length} 間店`;
+    }
+
+    function updateCityOptions() {
+      const citySelect = document.getElementById("citySelect");
+      const currentValue = citySelect.value;
+
+      const cities = [...new Set(
+        places
+          .map(p => p.city)
+          .filter(city => city && city.trim() !== "")
+      )].sort((a, b) => a.localeCompare(b, "zh-Hant"));
+
+      citySelect.innerHTML = '<option value="">全部城市</option>';
+
+      cities.forEach(city => {
+        const option = document.createElement("option");
+        option.value = city;
+        option.textContent = city;
+        citySelect.appendChild(option);
+      });
+
+      if ([...citySelect.options].some(option => option.value === currentValue)) {
+        citySelect.value = currentValue;
+      }
+    }
+
+    function filterPlaces() {
+      const keyword = document.getElementById("keywordInput").value.trim().toLowerCase();
+      const selectedCity = document.getElementById("citySelect").value.trim().toLowerCase();
+
+      return places.filter(p => {
+        const matchCity = !selectedCity || (p.city || "").toLowerCase() === selectedCity;
+        const text = `${p.name} ${p.address} ${p.city} ${p.note}`.toLowerCase();
+        const matchKeyword = !keyword || text.includes(keyword);
+        return matchCity && matchKeyword;
+      });
+    }
+
+    function updateEmbeddedMap(place) {
+      const mapFrame = document.getElementById("mapFrame");
+      if (!mapFrame) return;
+
+      if (!GOOGLE_MAPS_EMBED_API_KEY) {
+        mapFrame.src = "";
+        mapFrame.style.display = "none";
+        return;
+      }
+
+      mapFrame.style.display = "block";
+      const query = [place.name, place.address].filter(Boolean).join(" ");
+      const embedUrl = `https://www.google.com/maps/embed/v1/search?key=${encodeURIComponent(GOOGLE_MAPS_EMBED_API_KEY)}&q=${encodeURIComponent(query)}`;
+      mapFrame.src = embedUrl;
+    }
+
+    function pickRandom() {
+      if (places.length === 0) {
+        alert("請先載入 CSV。");
+        return;
+      }
+
+      const filtered = filterPlaces();
+
+      if (filtered.length === 0) {
+        alert("找不到符合條件的店家。");
+        return;
+      }
+
+      const index = Math.floor(Math.random() * filtered.length);
+      lastPicked = filtered[index];
+      renderResult(lastPicked, filtered.length);
+    }
+
+    function renderResult(place, count) {
+      document.getElementById("resultBox").classList.remove("hidden");
+      document.getElementById("nameText").textContent = place.name || "未命名地點";
+      document.getElementById("cityText").textContent = place.city ? `城市：${place.city}` : "城市：未提供";
+      document.getElementById("addressText").textContent = place.address ? `地址：${place.address}` : "地址：未提供";
+      document.getElementById("noteText").textContent = place.note ? `備註：${place.note}` : "備註：無";
+      document.getElementById("countText").textContent = `本次候選共 ${count} 間`;
+
+      updateEmbeddedMap(place);
+    }
+
+    function openInGoogleMaps() {
+      if (!lastPicked) return;
+
+      if (lastPicked.url) {
+        window.open(lastPicked.url, "_blank");
+        return;
+      }
+
+      const query = [lastPicked.name, lastPicked.address].filter(Boolean).join(" ");
+      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+      window.open(mapsUrl, "_blank");
+    }
+
+    document.getElementById("fileInput").addEventListener("change", function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const text = e.target.result;
+        loadCSV(text);
+        saveCSVToLocal(text);
+      };
+      reader.readAsText(file, "utf-8");
+    });
+
+    document.getElementById("pickBtn").addEventListener("click", pickRandom);
+    document.getElementById("repickBtn").addEventListener("click", pickRandom);
+    document.getElementById("openMapBtn").addEventListener("click", openInGoogleMaps);
+
+    document.getElementById("clearBtn").addEventListener("click", function() {
+      document.getElementById("keywordInput").value = "";
+      document.getElementById("citySelect").value = "";
+      document.getElementById("countText").textContent = places.length ? `已載入 ${places.length} 間店` : "尚未載入資料";
+    });
+
+    document.getElementById("resetDataBtn").addEventListener("click", function() {
+      localStorage.removeItem("dinner_csv_text");
+      places = [];
+      lastPicked = null;
+      document.getElementById("citySelect").innerHTML = '<option value="">全部城市</option>';
+      document.getElementById("countText").textContent = "尚未載入資料";
+      document.getElementById("resultBox").classList.add("hidden");
+      alert("已清除手機中儲存的清單。");
+    });
+
+    loadCSVFromLocal();
+  </script>
+</body>
+</html>
