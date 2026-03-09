@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>吃飯囉，晚餐隨機選擇器</title>
+  <title>抽一個，今天去哪！</title>
   <style>
     * {
       box-sizing: border-box;
@@ -75,6 +75,11 @@
       background: #ececec;
     }
 
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
     .button-row {
       display: block;
     }
@@ -133,6 +138,200 @@
       background: #f4f4f4;
     }
 
+    .slot-box {
+      padding: 14px;
+      text-align: center;
+      background: linear-gradient(180deg, #fdfdfd 0%, #f7f7f7 100%);
+    }
+
+    .slot-title {
+      font-size: 15px;
+      color: #555;
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+
+    .slot-shell {
+      position: relative;
+      padding: 16px 18px 18px;
+      border-radius: 24px;
+      background: linear-gradient(180deg, #d42828 0%, #9b1212 100%);
+      border: 4px solid #7d0d0d;
+      box-shadow:
+        inset 0 2px 0 rgba(255,255,255,0.18),
+        inset 0 -3px 0 rgba(0,0,0,0.18),
+        0 12px 24px rgba(0,0,0,0.18);
+      overflow: visible;
+    }
+
+    .slot-top {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 12px;
+      gap: 10px;
+    }
+
+    .slot-light {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: #ffd86b;
+      box-shadow: 0 0 8px rgba(255,216,107,0.9);
+      animation: blinkLights 1s infinite alternate;
+    }
+
+    .slot-light:nth-child(2) { animation-delay: 0.1s; }
+    .slot-light:nth-child(3) { animation-delay: 0.2s; }
+    .slot-light:nth-child(4) { animation-delay: 0.3s; }
+    .slot-light:nth-child(5) { animation-delay: 0.4s; }
+
+    @keyframes blinkLights {
+      from { opacity: 0.55; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1.08); }
+    }
+
+    .slot-machine-wrap {
+      position: relative;
+      padding-right: 34px;
+    }
+
+    .slot-machine {
+      position: relative;
+      height: 96px;
+      border: 3px solid #ddd;
+      border-radius: 18px;
+      overflow: hidden;
+      background: linear-gradient(180deg, #141414 0%, #090909 100%);
+      box-shadow: inset 0 0 22px rgba(255,255,255,0.08);
+    }
+
+    .slot-window {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 16px;
+    }
+
+    .slot-item {
+      width: 100%;
+      text-align: center;
+      font-size: 24px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.3;
+      word-break: break-word;
+      transition: transform 0.12s ease, opacity 0.12s ease;
+    }
+
+    .slot-glow-top,
+    .slot-glow-bottom {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 22px;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .slot-glow-top {
+      top: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.44) 0%, rgba(0,0,0,0) 100%);
+    }
+
+    .slot-glow-bottom {
+      bottom: 0;
+      background: linear-gradient(0deg, rgba(0,0,0,0.44) 0%, rgba(0,0,0,0) 100%);
+    }
+
+    .slot-highlight {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      top: 50%;
+      height: 54px;
+      transform: translateY(-50%);
+      border: 1px solid rgba(255,255,255,0.32);
+      border-radius: 12px;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.08) inset;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .slot-handle-wrap {
+      position: absolute;
+      right: -6px;
+      top: 10px;
+      width: 42px;
+      height: 130px;
+      display: flex;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .slot-handle-arm {
+      position: absolute;
+      top: 0;
+      width: 8px;
+      height: 84px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #d7d7d7 0%, #8f8f8f 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.55);
+      transform-origin: top center;
+      transition: transform 0.2s ease;
+    }
+
+    .slot-handle-knob {
+      position: absolute;
+      bottom: 28px;
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 35% 35%, #fff0a3 0%, #ffcd39 45%, #d88b00 100%);
+      border: 2px solid #9f5c00;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+      transition: transform 0.2s ease;
+    }
+
+    .pulling .slot-handle-arm {
+      transform: translateY(22px);
+    }
+
+    .pulling .slot-handle-knob {
+      transform: translateY(22px);
+    }
+
+    .slot-status {
+      margin-top: 12px;
+      font-size: 14px;
+      color: #fdf0f0;
+      min-height: 22px;
+    }
+
+    .winner-burst {
+      animation: winnerPop 0.7s ease;
+    }
+
+    .shake-win {
+      animation: shakeWin 0.45s ease;
+    }
+
+    @keyframes winnerPop {
+      0% { transform: scale(0.92); }
+      40% { transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes shakeWin {
+      0% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(7px); }
+      60% { transform: translateX(-5px); }
+      80% { transform: translateX(4px); }
+      100% { transform: translateX(0); }
+    }
+
     @media (min-width: 769px) {
       body {
         padding: 32px 16px 40px;
@@ -144,6 +343,10 @@
 
       #mapFrame {
         height: 320px;
+      }
+
+      .slot-item {
+        font-size: 28px;
       }
     }
   </style>
@@ -174,12 +377,44 @@
     <input type="text" id="keywordInput" placeholder="可輸入關鍵字，例如 火鍋、燒肉、咖啡廳" />
 
     <div class="button-row">
-      <button id="pickBtn">隨機選一家</button>
+      <button id="pickBtn">開始抽選</button>
       <button id="clearBtn">清空篩選</button>
       <button id="resetDataBtn">清除已儲存清單</button>
     </div>
 
     <div class="muted" id="countText">尚未載入資料</div>
+  </div>
+
+  <div class="box slot-box hidden" id="slotBox">
+    <div class="slot-title">今晚吃什麼</div>
+
+    <div class="slot-shell" id="slotShell">
+      <div class="slot-top">
+        <span class="slot-light"></span>
+        <span class="slot-light"></span>
+        <span class="slot-light"></span>
+        <span class="slot-light"></span>
+        <span class="slot-light"></span>
+      </div>
+
+      <div class="slot-machine-wrap">
+        <div class="slot-machine" id="slotMachine">
+          <div class="slot-glow-top"></div>
+          <div class="slot-window">
+            <div class="slot-item" id="slotItem">準備抽選中</div>
+          </div>
+          <div class="slot-highlight"></div>
+          <div class="slot-glow-bottom"></div>
+        </div>
+
+        <div class="slot-handle-wrap">
+          <div class="slot-handle-arm" id="slotHandleArm"></div>
+          <div class="slot-handle-knob" id="slotHandleKnob"></div>
+        </div>
+      </div>
+
+      <div class="slot-status" id="slotStatus">按下開始抽選</div>
+    </div>
   </div>
 
   <div class="box hidden" id="resultBox">
@@ -212,6 +447,7 @@
 
     let places = [];
     let lastPicked = null;
+    let isAnimating = false;
 
     function parseCSV(text) {
       const rows = [];
@@ -346,9 +582,8 @@
     }
 
     function updateCityOptions() {
-      const cities = [...new Set(
-        places.map(p => p.city).filter(v => v)
-      )].sort((a, b) => a.localeCompare(b, "zh-Hant"))
+      const cities = [...new Set(places.map(p => p.city).filter(v => v))]
+        .sort((a, b) => a.localeCompare(b, "zh-Hant"))
         .map(v => ({ value: v, label: v }));
 
       updateSelectOptions("citySelect", cities, "全部城市");
@@ -356,21 +591,21 @@
 
     function updatePriceOptions() {
       const priceOrder = ["$", "$$", "$$$", "$$$$"];
-      const prices = [...new Set(
-        places.map(p => p.price).filter(v => v)
-      )]
-      .sort((a, b) => priceOrder.indexOf(a) - priceOrder.indexOf(b))
-      .map(v => ({ value: v, label: v }));
+      const prices = [...new Set(places.map(p => p.price).filter(v => v))]
+        .sort((a, b) => {
+          const ai = priceOrder.indexOf(a);
+          const bi = priceOrder.indexOf(b);
+          return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+        })
+        .map(v => ({ value: v, label: v }));
 
       updateSelectOptions("priceSelect", prices, "全部價格");
     }
 
     function updateTypeOptions() {
-      const types = [...new Set(
-        places.map(p => p.type).filter(v => v)
-      )]
-      .sort((a, b) => formatType(a).localeCompare(formatType(b), "zh-Hant"))
-      .map(v => ({ value: v, label: formatType(v) }));
+      const types = [...new Set(places.map(p => p.type).filter(v => v))]
+        .sort((a, b) => formatType(a).localeCompare(formatType(b), "zh-Hant"))
+        .map(v => ({ value: v, label: formatType(v) }));
 
       updateSelectOptions("typeSelect", types, "全部類型");
     }
@@ -387,7 +622,6 @@
         const matchType = !selectedType || (p.type || "").toLowerCase() === selectedType;
         const text = `${p.name} ${p.address} ${p.city} ${p.note} ${p.type} ${formatType(p.type)} ${p.price}`.toLowerCase();
         const matchKeyword = !keyword || text.includes(keyword);
-
         return matchCity && matchPrice && matchType && matchKeyword;
       });
     }
@@ -408,7 +642,87 @@
       mapFrame.src = embedUrl;
     }
 
-    function pickRandom() {
+    function setButtonsDisabled(disabled) {
+      document.getElementById("pickBtn").disabled = disabled;
+      document.getElementById("repickBtn").disabled = disabled;
+      document.getElementById("clearBtn").disabled = disabled;
+      document.getElementById("resetDataBtn").disabled = disabled;
+      document.getElementById("fileInput").disabled = disabled;
+      document.getElementById("citySelect").disabled = disabled;
+      document.getElementById("priceSelect").disabled = disabled;
+      document.getElementById("typeSelect").disabled = disabled;
+      document.getElementById("keywordInput").disabled = disabled;
+    }
+
+    function setSlotText(text) {
+      const slotItem = document.getElementById("slotItem");
+      slotItem.classList.remove("winner-burst");
+      slotItem.style.opacity = "0.18";
+      slotItem.style.transform = "translateY(26px)";
+
+      requestAnimationFrame(() => {
+        slotItem.textContent = text;
+        slotItem.style.opacity = "1";
+        slotItem.style.transform = "translateY(0)";
+      });
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function animateHandlePull() {
+      const shell = document.getElementById("slotShell");
+      shell.classList.add("pulling");
+      await sleep(220);
+      shell.classList.remove("pulling");
+      await sleep(110);
+    }
+
+    async function runSlotAnimation(filtered, winner) {
+      const slotBox = document.getElementById("slotBox");
+      const slotStatus = document.getElementById("slotStatus");
+      const slotItem = document.getElementById("slotItem");
+      const slotShell = document.getElementById("slotShell");
+
+      slotBox.classList.remove("hidden");
+      slotStatus.textContent = "準備啟動老虎機";
+      document.getElementById("resultBox").classList.add("hidden");
+
+      await animateHandlePull();
+
+      const pool = filtered.length >= 8 ? filtered : [...filtered, ...filtered, ...filtered, ...filtered];
+      const totalRounds = 34;
+
+      slotStatus.textContent = "老虎機高速抽選中";
+
+      for (let i = 0; i < totalRounds; i++) {
+        const current = pool[i % pool.length];
+        setSlotText(current.name || "未命名地點");
+
+        if (i < 16) {
+          await sleep(55);
+        } else if (i < 25) {
+          await sleep(95 + (i - 16) * 16);
+        } else {
+          await sleep(185 + (i - 25) * 45);
+        }
+      }
+
+      slotStatus.textContent = "最後結果揭曉";
+      setSlotText(winner.name || "未命名地點");
+      slotItem.classList.add("winner-burst");
+      slotShell.classList.remove("shake-win");
+      void slotShell.offsetWidth;
+      slotShell.classList.add("shake-win");
+      await sleep(550);
+      slotShell.classList.remove("shake-win");
+      slotStatus.textContent = "今晚就吃這家";
+    }
+
+    async function pickRandomWithAnimation() {
+      if (isAnimating) return;
+
       if (places.length === 0) {
         alert("請先載入 CSV。");
         return;
@@ -421,9 +735,17 @@
         return;
       }
 
+      isAnimating = true;
+      setButtonsDisabled(true);
+
       const index = Math.floor(Math.random() * filtered.length);
       lastPicked = filtered[index];
+
+      await runSlotAnimation(filtered, lastPicked);
       renderResult(lastPicked, filtered.length);
+
+      isAnimating = false;
+      setButtonsDisabled(false);
     }
 
     function setTag(id, text, fallback) {
@@ -474,11 +796,12 @@
       reader.readAsText(file, "utf-8");
     });
 
-    document.getElementById("pickBtn").addEventListener("click", pickRandom);
-    document.getElementById("repickBtn").addEventListener("click", pickRandom);
+    document.getElementById("pickBtn").addEventListener("click", pickRandomWithAnimation);
+    document.getElementById("repickBtn").addEventListener("click", pickRandomWithAnimation);
     document.getElementById("openMapBtn").addEventListener("click", openInGoogleMaps);
 
     document.getElementById("clearBtn").addEventListener("click", function() {
+      if (isAnimating) return;
       document.getElementById("keywordInput").value = "";
       document.getElementById("citySelect").value = "";
       document.getElementById("priceSelect").value = "";
@@ -487,6 +810,7 @@
     });
 
     document.getElementById("resetDataBtn").addEventListener("click", function() {
+      if (isAnimating) return;
       localStorage.removeItem("dinner_csv_text");
       places = [];
       lastPicked = null;
@@ -495,6 +819,7 @@
       document.getElementById("typeSelect").innerHTML = '<option value="">全部類型</option>';
       document.getElementById("countText").textContent = "尚未載入資料";
       document.getElementById("resultBox").classList.add("hidden");
+      document.getElementById("slotBox").classList.add("hidden");
       alert("已清除手機中儲存的清單。");
     });
 
