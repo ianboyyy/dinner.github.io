@@ -3,34 +3,65 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>晚餐隨機選擇器</title>
+  <title>吃飯囉，晚餐隨機選擇器</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: "Noto Sans TC", Arial, sans-serif;
       max-width: 760px;
-      margin: 40px auto;
-      padding: 0 16px 32px;
-      line-height: 1.6;
+      margin: 0 auto;
+      padding: 16px 12px 28px;
+      line-height: 1.55;
       color: #222;
+      background: #fafafa;
     }
 
     h1 {
-      margin-bottom: 8px;
+      font-size: 24px;
+      line-height: 1.3;
+      margin: 0 0 8px;
+    }
+
+    p {
+      margin: 0 0 10px;
+      font-size: 15px;
+      color: #444;
     }
 
     .box {
       border: 1px solid #ddd;
-      border-radius: 12px;
-      padding: 16px;
-      margin-top: 16px;
+      border-radius: 16px;
+      padding: 14px;
+      margin-top: 14px;
       background: #fff;
     }
 
+    .legend {
+      font-size: 14px;
+      color: #555;
+      background: #fffdf5;
+      border: 1px solid #eee3b3;
+    }
+
+    .legend-title {
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #333;
+    }
+
+    .legend-item {
+      margin: 4px 0;
+    }
+
     input, select, button {
+      width: 100%;
       font-size: 16px;
-      padding: 10px 12px;
-      margin: 6px 6px 6px 0;
-      border-radius: 8px;
+      padding: 14px 12px;
+      margin: 8px 0;
+      border-radius: 10px;
       border: 1px solid #ccc;
       background: #fff;
     }
@@ -44,114 +75,124 @@
       background: #ececec;
     }
 
+    .button-row {
+      display: block;
+    }
+
+    .button-row button {
+      width: 100%;
+      margin: 8px 0 0;
+    }
+
     .result {
-      font-size: 22px;
-      font-weight: bold;
-      margin: 12px 0;
+      font-size: 26px;
+      font-weight: 700;
+      line-height: 1.35;
+      margin-bottom: 10px;
+    }
+
+    .info-line {
+      font-size: 15px;
+      color: #333;
+      margin: 6px 0;
+      word-break: break-word;
     }
 
     .muted {
       color: #666;
       font-size: 14px;
+      margin-top: 10px;
     }
 
     .hidden {
       display: none;
     }
 
-    #mapFrame {
-      width: 100%;
-      height: 320px;
-      border: 0;
-      border-radius: 12px;
-      margin-top: 16px;
-      background: #fafafa;
-    }
-
-    .button-row {
+    .tag-row {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-top: 10px;
+      margin: 10px 0 4px;
     }
 
-    .button-row button {
-      margin: 0;
+    .tag {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      background: #f2f2f2;
+      color: #333;
     }
 
-    @media (max-width: 768px) {
+    #mapFrame {
+      width: 100%;
+      height: 260px;
+      border: 0;
+      border-radius: 14px;
+      margin-top: 16px;
+      background: #f4f4f4;
+    }
+
+    @media (min-width: 769px) {
       body {
-        margin: 16px auto;
-        padding: 0 12px 24px;
+        padding: 32px 16px 40px;
       }
 
       h1 {
-        font-size: 24px;
-        line-height: 1.3;
-      }
-
-      p {
-        font-size: 15px;
-      }
-
-      .box {
-        padding: 14px;
-        border-radius: 14px;
-      }
-
-      input,
-      select,
-      button {
-        width: 100%;
-        box-sizing: border-box;
-        font-size: 16px;
-        padding: 14px 12px;
-        margin: 8px 0;
-      }
-
-      .button-row {
-        display: block;
-      }
-
-      .button-row button {
-        width: 100%;
-        margin: 8px 0 0;
-      }
-
-      .result {
-        font-size: 24px;
-        line-height: 1.4;
+        font-size: 30px;
       }
 
       #mapFrame {
-        height: 260px;
+        height: 320px;
       }
     }
   </style>
 </head>
 <body>
-  <h1>晚餐隨機選擇器</h1>
-  <p>先匯入你的 CSV 清單，之後手機會記住資料。下次打開可直接使用。</p>
+  <h1>吃飯囉，晚餐隨機選擇器</h1>
+  <p>先匯入你的 CSV 清單，手機會記住資料。下次打開可直接使用。</p>
+
+  <div class="box legend">
+    <div class="legend-title">價格說明</div>
+    <div class="legend-item">$：平價（例如：小吃店）</div>
+    <div class="legend-item">$$：一般餐廳（例如：簡餐、咖啡廳）</div>
+    <div class="legend-item">$$$：高級餐廳（例如：飯店餐廳、高檔燒肉）</div>
+    <div class="legend-item">$$$$：極昂貴</div>
+  </div>
 
   <div class="box">
     <input type="file" id="fileInput" accept=".csv" />
     <select id="citySelect">
       <option value="">全部城市</option>
     </select>
-    <input type="text" id="keywordInput" placeholder="可輸入關鍵字，例如 火鍋、拉麵、日式" />
+    <select id="priceSelect">
+      <option value="">全部價格</option>
+    </select>
+    <select id="typeSelect">
+      <option value="">全部類型</option>
+    </select>
+    <input type="text" id="keywordInput" placeholder="可輸入關鍵字，例如 火鍋、燒肉、咖啡廳" />
+
     <div class="button-row">
       <button id="pickBtn">隨機選一家</button>
       <button id="clearBtn">清空篩選</button>
       <button id="resetDataBtn">清除已儲存清單</button>
     </div>
+
     <div class="muted" id="countText">尚未載入資料</div>
   </div>
 
   <div class="box hidden" id="resultBox">
     <div class="result" id="nameText"></div>
-    <div id="cityText"></div>
-    <div id="addressText"></div>
-    <div id="noteText"></div>
+    <div class="tag-row">
+      <span class="tag" id="ratingTag"></span>
+      <span class="tag" id="countTag"></span>
+      <span class="tag" id="priceTag"></span>
+      <span class="tag" id="typeTag"></span>
+      <span class="tag" id="cityTag"></span>
+    </div>
+    <div class="info-line" id="addressText"></div>
+    <div class="info-line" id="noteText"></div>
 
     <iframe
       id="mapFrame"
@@ -217,9 +258,16 @@
 
     function getCell(obj, keys) {
       for (const key of keys) {
-        if (obj[key] !== undefined) return obj[key].trim();
+        if (obj[key] !== undefined) return String(obj[key]).trim();
       }
       return "";
+    }
+
+    function cleanValue(value) {
+      if (value === null || value === undefined) return "";
+      const text = String(value).trim();
+      if (!text || text.toLowerCase() === "nan") return "";
+      return text;
     }
 
     function saveCSVToLocal(text) {
@@ -231,6 +279,21 @@
       if (saved) {
         loadCSV(saved);
       }
+    }
+
+    function formatType(type) {
+      const value = cleanValue(type).toLowerCase();
+      const map = {
+        restaurant: "餐廳",
+        store: "小吃店／商店",
+        bar: "酒吧",
+        cafe: "咖啡廳",
+        bakery: "麵包店",
+        meal_takeaway: "外帶餐飲",
+        meal_delivery: "外送餐飲",
+        food_court: "美食街"
+      };
+      return map[value] || cleanValue(type) || "未提供";
     }
 
     function loadCSV(text) {
@@ -247,51 +310,85 @@
         headers.forEach((h, i) => rowObj[h] = cols[i] || "");
 
         return {
-          name: getCell(rowObj, ["name", "title", "店名", "名稱"]),
-          address: getCell(rowObj, ["address", "地址"]),
-          city: getCell(rowObj, ["city", "城市"]),
-          note: getCell(rowObj, ["note", "備註", "tag", "分類"]),
-          url: getCell(rowObj, ["url", "link", "maps", "googlemaps"])
+          name: cleanValue(getCell(rowObj, ["name", "title", "店名", "名稱"])),
+          address: cleanValue(getCell(rowObj, ["address", "地址"])),
+          rating: cleanValue(getCell(rowObj, ["rating", "評分"])),
+          count: cleanValue(getCell(rowObj, ["count", "reviews", "評論數", "評價數"])),
+          price: cleanValue(getCell(rowObj, ["price", "價格"])),
+          type: cleanValue(getCell(rowObj, ["type", "類型", "分類"])),
+          city: cleanValue(getCell(rowObj, ["city", "城市"])),
+          note: cleanValue(getCell(rowObj, ["note", "備註", "tag"])),
+          url: cleanValue(getCell(rowObj, ["url", "link", "maps", "googlemaps"]))
         };
       }).filter(p => p.name || p.address);
 
       updateCityOptions();
+      updatePriceOptions();
+      updateTypeOptions();
       document.getElementById("countText").textContent = `已載入 ${places.length} 間店`;
     }
 
-    function updateCityOptions() {
-      const citySelect = document.getElementById("citySelect");
-      const currentValue = citySelect.value;
+    function updateSelectOptions(selectId, values, defaultLabel) {
+      const select = document.getElementById(selectId);
+      const currentValue = select.value;
+      select.innerHTML = `<option value="">${defaultLabel}</option>`;
 
-      const cities = [...new Set(
-        places
-          .map(p => p.city)
-          .filter(city => city && city.trim() !== "")
-      )].sort((a, b) => a.localeCompare(b, "zh-Hant"));
-
-      citySelect.innerHTML = '<option value="">全部城市</option>';
-
-      cities.forEach(city => {
+      values.forEach(item => {
         const option = document.createElement("option");
-        option.value = city;
-        option.textContent = city;
-        citySelect.appendChild(option);
+        option.value = item.value;
+        option.textContent = item.label;
+        select.appendChild(option);
       });
 
-      if ([...citySelect.options].some(option => option.value === currentValue)) {
-        citySelect.value = currentValue;
+      if ([...select.options].some(option => option.value === currentValue)) {
+        select.value = currentValue;
       }
+    }
+
+    function updateCityOptions() {
+      const cities = [...new Set(
+        places.map(p => p.city).filter(v => v)
+      )].sort((a, b) => a.localeCompare(b, "zh-Hant"))
+        .map(v => ({ value: v, label: v }));
+
+      updateSelectOptions("citySelect", cities, "全部城市");
+    }
+
+    function updatePriceOptions() {
+      const priceOrder = ["$", "$$", "$$$", "$$$$"];
+      const prices = [...new Set(
+        places.map(p => p.price).filter(v => v)
+      )]
+      .sort((a, b) => priceOrder.indexOf(a) - priceOrder.indexOf(b))
+      .map(v => ({ value: v, label: v }));
+
+      updateSelectOptions("priceSelect", prices, "全部價格");
+    }
+
+    function updateTypeOptions() {
+      const types = [...new Set(
+        places.map(p => p.type).filter(v => v)
+      )]
+      .sort((a, b) => formatType(a).localeCompare(formatType(b), "zh-Hant"))
+      .map(v => ({ value: v, label: formatType(v) }));
+
+      updateSelectOptions("typeSelect", types, "全部類型");
     }
 
     function filterPlaces() {
       const keyword = document.getElementById("keywordInput").value.trim().toLowerCase();
       const selectedCity = document.getElementById("citySelect").value.trim().toLowerCase();
+      const selectedPrice = document.getElementById("priceSelect").value.trim();
+      const selectedType = document.getElementById("typeSelect").value.trim().toLowerCase();
 
       return places.filter(p => {
         const matchCity = !selectedCity || (p.city || "").toLowerCase() === selectedCity;
-        const text = `${p.name} ${p.address} ${p.city} ${p.note}`.toLowerCase();
+        const matchPrice = !selectedPrice || (p.price || "") === selectedPrice;
+        const matchType = !selectedType || (p.type || "").toLowerCase() === selectedType;
+        const text = `${p.name} ${p.address} ${p.city} ${p.note} ${p.type} ${formatType(p.type)} ${p.price}`.toLowerCase();
         const matchKeyword = !keyword || text.includes(keyword);
-        return matchCity && matchKeyword;
+
+        return matchCity && matchPrice && matchType && matchKeyword;
       });
     }
 
@@ -329,10 +426,21 @@
       renderResult(lastPicked, filtered.length);
     }
 
+    function setTag(id, text, fallback) {
+      const el = document.getElementById(id);
+      el.textContent = text || fallback;
+    }
+
     function renderResult(place, count) {
       document.getElementById("resultBox").classList.remove("hidden");
       document.getElementById("nameText").textContent = place.name || "未命名地點";
-      document.getElementById("cityText").textContent = place.city ? `城市：${place.city}` : "城市：未提供";
+
+      setTag("ratingTag", place.rating ? `★ ${place.rating}` : "★ 未提供", "★ 未提供");
+      setTag("countTag", place.count ? `${place.count} 則評價` : "評價數未提供", "評價數未提供");
+      setTag("priceTag", place.price ? `價格：${place.price}` : "價格未提供", "價格未提供");
+      setTag("typeTag", place.type ? `類型：${formatType(place.type)}` : "類型未提供", "類型未提供");
+      setTag("cityTag", place.city ? `城市：${place.city}` : "城市未提供", "城市未提供");
+
       document.getElementById("addressText").textContent = place.address ? `地址：${place.address}` : "地址：未提供";
       document.getElementById("noteText").textContent = place.note ? `備註：${place.note}` : "備註：無";
       document.getElementById("countText").textContent = `本次候選共 ${count} 間`;
@@ -373,6 +481,8 @@
     document.getElementById("clearBtn").addEventListener("click", function() {
       document.getElementById("keywordInput").value = "";
       document.getElementById("citySelect").value = "";
+      document.getElementById("priceSelect").value = "";
+      document.getElementById("typeSelect").value = "";
       document.getElementById("countText").textContent = places.length ? `已載入 ${places.length} 間店` : "尚未載入資料";
     });
 
@@ -381,6 +491,8 @@
       places = [];
       lastPicked = null;
       document.getElementById("citySelect").innerHTML = '<option value="">全部城市</option>';
+      document.getElementById("priceSelect").innerHTML = '<option value="">全部價格</option>';
+      document.getElementById("typeSelect").innerHTML = '<option value="">全部類型</option>';
       document.getElementById("countText").textContent = "尚未載入資料";
       document.getElementById("resultBox").classList.add("hidden");
       alert("已清除手機中儲存的清單。");
